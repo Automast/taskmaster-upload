@@ -15,6 +15,28 @@ if (!fs.existsSync(UPLOAD_DIR)) {
     fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
+// Global state to store the persistent redirect URL
+let currentDownloadUrl = '';
+
+// Endpoint to update the persistent shortened URL redirect target
+app.post('/set-download', (req, res) => {
+    const { url } = req.body;
+    if (!url) {
+        return res.status(400).json({ error: 'No URL provided' });
+    }
+    currentDownloadUrl = url;
+    res.json({ message: 'Download URL updated successfully', url: currentDownloadUrl });
+});
+
+// The persistent shortened URL endpoint (e.g. backendurl.com/downloadnow)
+app.get('/downloadnow', (req, res) => {
+    if (currentDownloadUrl) {
+        res.redirect(currentDownloadUrl);
+    } else {
+        res.status(404).send('No download link is currently active.');
+    }
+});
+
 // Serve uploaded files statically so any frontend can use them
 app.use('/data', express.static(UPLOAD_DIR));
 
